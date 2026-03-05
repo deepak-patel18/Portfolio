@@ -10,7 +10,10 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: [
+    "http://localhost:5173",
+    "https://portfolio-six-hazel-n1fqu65lpu.vercel.app"
+  ],
   credentials: true
 }));
 
