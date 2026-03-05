@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://portfolio-9i2n.onrender.com/api";
 
 const handleResponse = async (res) => {
   const data = await res.json();
