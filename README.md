@@ -3,7 +3,7 @@
 ## 🌐 Live Demo
 
 Frontend (Vercel)
-https://vercel.com/deepak-patels-projects-9247963b
+portfolio-six-hazel-n1fqu65lpu.vercel.app
 
 Backend API (Render)
 https://portfolio-9i2n.onrender.com
