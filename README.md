@@ -3,7 +3,7 @@
 ## 🌐 Live Demo
 
 Frontend (Vercel)
-portfolio-six-hazel-n1fqu65lpu.vercel.app
+https://portfolio-six-hazel-n1fqu65lpu.vercel.app/
 
 Backend API (Render)
 https://portfolio-9i2n.onrender.com
