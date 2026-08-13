@@ -30,11 +30,12 @@ export const getProjects = async () => {
 };
 
 // CREATE PROJECT
-export const createProject = async (data) => {
+export const createProject = async (data, token) => {
   const res = await fetch(`${API_URL}/projects`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(data),
   });
@@ -43,9 +44,12 @@ export const createProject = async (data) => {
 };
 
 // DELETE PROJECT
-export const deleteProject = async (id) => {
+export const deleteProject = async (id, token) => {
   const res = await fetch(`${API_URL}/projects/${id}`, {
     method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   return handleResponse(res);
