@@ -3,14 +3,16 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const connectDB = require("./config/db");
 
+// Load environment variables
 dotenv.config();
 
 const app = express();
 
-// Connect MongoDB
+// ================= DATABASE =================
 connectDB();
 
-// Middleware
+// ================= MIDDLEWARE =================
+
 app.use(
   cors({
     origin: [
@@ -23,19 +25,25 @@ app.use(
 
 app.use(express.json());
 
-// Routes
+// ================= ROUTES =================
+
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/projects", require("./routes/projectRoutes"));
 app.use("/api/contact", require("./routes/contactRoutes"));
 
-// Test route
+// ================= TEST ROUTE =================
+
 app.get("/", (req, res) => {
-  res.send("API Running...");
+  res.json({
+    success: true,
+    message: "Portfolio API is running 🚀",
+  });
 });
 
-// Port
+// ================= SERVER =================
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
