@@ -1,198 +1,429 @@
 import { useEffect, useState } from "react";
-import { getProjects, createProject, deleteProject } from "../api/api";
+
+import {
+  getProjects,
+  createProject,
+  deleteProject,
+} from "../api/api";
+
+import {
+  FaGithub,
+  FaExternalLinkAlt,
+  FaTrash,
+  FaHome,
+} from "react-icons/fa";
 
 const Dashboard = () => {
-
   const [projects, setProjects] = useState([]);
 
   const [form, setForm] = useState({
     title: "",
     description: "",
-    github: "",
-    live: "",
+    githubLink: "",
+    liveLink: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
+  // =====================================================
+  // GET PROJECTS
+  // =====================================================
+
   const fetchProjects = async () => {
-    const data = await getProjects();
-    setProjects(data);
+    try {
+      const data = await getProjects();
+
+      console.log("Dashboard projects:", data);
+
+      setProjects(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to load projects:", error);
+    }
   };
 
   useEffect(() => {
     fetchProjects();
   }, []);
 
+  // =====================================================
+  // FORM CHANGE
+  // =====================================================
+
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  // =====================================================
+  // ADD PROJECT
+  // =====================================================
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const token = localStorage.getItem("token");
 
-    await createProject(form, token);
+    if (!token) {
+      alert("Please login as admin.");
+      return;
+    }
 
-    setForm({
-      title: "",
-      description: "",
-      github: "",
-      live: "",
-    });
+    try {
+      setLoading(true);
 
-    fetchProjects();
+      await createProject(form, token);
+
+      alert("Project added successfully ");
+
+      setForm({
+        title: "",
+        description: "",
+        githubLink: "",
+        liveLink: "",
+      });
+
+      await fetchProjects();
+    } catch (error) {
+      console.error("Add project error:", error);
+
+      alert(
+        error?.message ||
+          "Failed to add project. Please check admin authentication."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // =====================================================
+  // DELETE PROJECT
+  // =====================================================
 
   const handleDelete = async (id) => {
     const token = localStorage.getItem("token");
 
-    await deleteProject(id, token);
+    if (!token) {
+      alert("Please login as admin.");
+      return;
+    }
 
-    fetchProjects();
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this project?"
+    );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      await deleteProject(id, token);
+
+      alert("Project deleted successfully ");
+
+      await fetchProjects();
+    } catch (error) {
+      console.error("Delete project error:", error);
+
+      alert(error?.message || "Failed to delete project.");
+    }
+  };
+
+  // =====================================================
+  // LOGOUT
+  // =====================================================
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+
+    window.location.href = "/";
   };
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
 
-      {/* SIDEBAR */}
-      <div className="w-64 bg-black border-r border-white/10 p-6">
+      {/* =====================================================
+          SIDEBAR
+      ===================================================== */}
 
-        <h1 className="text-2xl font-bold mb-10">Admin Panel</h1>
+      <aside className="hidden md:block w-64 bg-black border-r border-white/10 p-6">
 
-        <nav className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold mb-10">
+          Admin Panel
+        </h1>
 
-          <a href="/" className="hover:text-blue-400">Home</a>
+        <nav className="flex flex-col gap-5">
 
-          <a href="/dashboard" className="hover:text-blue-400">
+          <a
+            href="/"
+            className="flex items-center gap-3 text-gray-300 hover:text-blue-400 transition"
+          >
+            <FaHome />
+            Home
+          </a>
+
+          <a
+            href="/dashboard"
+            className="text-blue-400 font-semibold"
+          >
             Dashboard
           </a>
 
           <button
-            onClick={() => {
-              localStorage.removeItem("token");
-              window.location.href = "/";
-            }}
-            className="text-left hover:text-red-400"
+            onClick={handleLogout}
+            className="text-left text-gray-300 hover:text-red-400 transition"
           >
             Logout
           </button>
 
         </nav>
 
-      </div>
+      </aside>
 
-      {/* MAIN CONTENT */}
-      <div className="flex-1 p-10">
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
 
-        <h2 className="text-4xl font-bold mb-10">
-          Manage Projects
-        </h2>
+      <main className="flex-1 p-6 md:p-10">
 
-        {/* ADD PROJECT */}
-        <div className="max-w-xl backdrop-blur-lg bg-white/10 border border-white/20 p-8 rounded-2xl mb-16">
+        {/* HEADER */}
 
-          <h3 className="text-2xl mb-6">Add Project</h3>
+        <div className="mb-10">
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <h2 className="text-4xl font-bold mb-3">
+            Manage Projects
+          </h2>
 
-            <input
-              type="text"
-              placeholder="Title"
-              value={form.title}
-              onChange={(e) =>
-                setForm({ ...form, title: e.target.value })
-              }
-              className="w-full p-3 rounded-lg bg-white/10 border border-white/20"
-              required
-            />
+          <p className="text-gray-400">
+            Add, manage and remove projects displayed on your portfolio.
+          </p>
 
-            <textarea
-              placeholder="Description"
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              className="w-full p-3 rounded-lg bg-white/10 border border-white/20"
-              required
-            />
+        </div>
 
-            <input
-              type="text"
-              placeholder="GitHub Link"
-              value={form.github}
-              onChange={(e) =>
-                setForm({ ...form, github: e.target.value })
-              }
-              className="w-full p-3 rounded-lg bg-white/10 border border-white/20"
-            />
+        {/* =====================================================
+            ADD PROJECT FORM
+        ===================================================== */}
 
-            <input
-              type="text"
-              placeholder="Live Project Link"
-              value={form.live}
-              onChange={(e) =>
-                setForm({ ...form, live: e.target.value })
-              }
-              className="w-full p-3 rounded-lg bg-white/10 border border-white/20"
-            />
+        <div className="max-w-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-7 md:p-8 rounded-3xl mb-16">
 
-            <button className="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-lg">
-              Add Project
+          <h3 className="text-2xl font-semibold mb-6">
+            Add New Project
+          </h3>
+
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-5"
+          >
+
+            {/* TITLE */}
+
+            <div>
+
+              <label className="block text-sm text-gray-400 mb-2">
+                Project Title
+              </label>
+
+              <input
+                type="text"
+                name="title"
+                placeholder="e.g. Event Booking System"
+                value={form.title}
+                onChange={handleChange}
+                required
+                className="w-full p-4 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-blue-500 transition"
+              />
+
+            </div>
+
+            {/* DESCRIPTION */}
+
+            <div>
+
+              <label className="block text-sm text-gray-400 mb-2">
+                Description
+              </label>
+
+              <textarea
+                name="description"
+                placeholder="Describe your project..."
+                value={form.description}
+                onChange={handleChange}
+                required
+                rows="5"
+                className="w-full p-4 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-blue-500 transition resize-none"
+              />
+
+            </div>
+
+            {/* GITHUB */}
+
+            <div>
+
+              <label className="block text-sm text-gray-400 mb-2">
+                GitHub URL
+              </label>
+
+              <input
+                type="url"
+                name="githubLink"
+                placeholder="https://github.com/username/project"
+                value={form.githubLink}
+                onChange={handleChange}
+                className="w-full p-4 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-blue-500 transition"
+              />
+
+            </div>
+
+            {/* LIVE */}
+
+            <div>
+
+              <label className="block text-sm text-gray-400 mb-2">
+                Live Project URL
+              </label>
+
+              <input
+                type="url"
+                name="liveLink"
+                placeholder="https://your-project.onrender.com"
+                value={form.liveLink}
+                onChange={handleChange}
+                className="w-full p-4 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-blue-500 transition"
+              />
+
+            </div>
+
+            {/* SUBMIT */}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-xl font-semibold transition"
+            >
+              {loading
+                ? "Adding Project..."
+                : "Add Project "}
             </button>
 
           </form>
 
         </div>
 
-        {/* PROJECT LIST */}
-        <div className="grid md:grid-cols-3 gap-8">
+        {/* =====================================================
+            EXISTING PROJECTS
+        ===================================================== */}
 
-          {projects.map((p) => (
-            <div
-              key={p._id}
-              className="backdrop-blur-lg bg-white/10 border border-white/20 p-6 rounded-2xl"
-            >
+        <div>
 
-              <h3 className="text-xl font-bold mb-3">
-                {p.title}
-              </h3>
+          <h3 className="text-3xl font-bold mb-8">
+            Existing Projects
+          </h3>
 
-              <p className="text-gray-300 mb-4">
-                {p.description}
-              </p>
+          {projects.length === 0 ? (
 
-              <div className="flex gap-3 mb-4">
+            <div className="text-gray-400">
+              No projects available.
+            </div>
 
-                {p.github && (
-                  <a
-                    href={p.github}
-                    target="_blank"
-                    className="text-blue-400"
+          ) : (
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-7">
+
+              {projects.map((project) => {
+
+                const githubUrl = project.githubLink?.trim();
+                const liveUrl = project.liveLink?.trim();
+
+                return (
+
+                  <div
+                    key={project._id}
+                    className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl"
                   >
-                    GitHub
-                  </a>
-                )}
 
-                {p.live && (
-                  <a
-                    href={p.live}
-                    target="_blank"
-                    className="text-green-400"
-                  >
-                    Live
-                  </a>
-                )}
+                    {/* ICON */}
 
-              </div>
+                    <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-xl mb-5">
+                      💻
+                    </div>
 
-              <button
-                onClick={() => handleDelete(p._id)}
-                className="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700"
-              >
-                Delete
-              </button>
+                    {/* TITLE */}
+
+                    <h4 className="text-xl font-bold mb-3">
+                      {project.title}
+                    </h4>
+
+                    {/* DESCRIPTION */}
+
+                    <p className="text-gray-400 leading-relaxed mb-5">
+                      {project.description}
+                    </p>
+
+                    {/* LINKS */}
+
+                    <div className="flex flex-wrap gap-3 mb-6">
+
+                      {githubUrl && (
+
+                        <a
+                          href={githubUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+                        >
+                          <FaGithub />
+                          GitHub
+                        </a>
+
+                      )}
+
+                      {liveUrl && (
+
+                        <a
+                          href={liveUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition"
+                        >
+                          <FaExternalLinkAlt />
+                          Live
+                        </a>
+
+                      )}
+
+                    </div>
+
+                    {!githubUrl && !liveUrl && (
+
+                      <p className="text-sm text-gray-500 mb-6">
+                        No project links added.
+                      </p>
+
+                    )}
+
+                    {/* DELETE */}
+
+                    <button
+                      onClick={() => handleDelete(project._id)}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition"
+                    >
+                      <FaTrash />
+                      Delete
+                    </button>
+
+                  </div>
+
+                );
+              })}
 
             </div>
-          ))}
+
+          )}
 
         </div>
 
-      </div>
+      </main>
 
     </div>
   );
