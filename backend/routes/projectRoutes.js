@@ -8,9 +8,14 @@ const {
   deleteProject,
 } = require("../controllers/projectController");
 
+const protect = require("../middleware/authMiddleware");
+
+// Public
 router.get("/", getProjects);
-router.post("/", createProject);
-router.put("/:id", updateProject);
-router.delete("/:id", deleteProject);
+
+// Protected - Admin
+router.post("/", protect, createProject);
+router.put("/:id", protect, updateProject);
+router.delete("/:id", protect, deleteProject);
 
 module.exports = router;
