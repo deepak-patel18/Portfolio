@@ -1,12 +1,27 @@
 const nodemailer = require("nodemailer");
 
+// =====================================================
+// EMAIL TRANSPORTER
+// =====================================================
+
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
 });
+
+// =====================================================
+// SEND CONTACT MESSAGE
+// =====================================================
 
 exports.sendMessage = async (req, res) => {
   try {
@@ -17,6 +32,7 @@ exports.sendMessage = async (req, res) => {
 
     const { name, email, message } = req.body;
 
+    // Validate fields
     if (!name || !email || !message) {
       return res.status(400).json({
         success: false,
@@ -24,13 +40,18 @@ exports.sendMessage = async (req, res) => {
       });
     }
 
+    console.log("====================================");
     console.log("📧 Sending email...");
     console.log("From:", process.env.EMAIL_USER);
     console.log("To:", process.env.EMAIL_USER);
+    console.log("====================================");
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    // Send email
+    const info = await transporter.sendMail({
+      from: `"Portfolio Contact" <${process.env.EMAIL_USER}>`,
+
       to: process.env.EMAIL_USER,
+
       replyTo: email,
 
       subject: `Portfolio Contact Message from ${name}`,
@@ -43,12 +64,24 @@ Email: ${email}
 
 Message:
 ${message}
+
+You can reply directly to this email to contact ${name}.
       `,
 
       html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <div style="
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          max-width: 600px;
+          margin: auto;
+          padding: 20px;
+        ">
 
-          <h2>📩 New Portfolio Contact Message</h2>
+          <h2 style="color: #2563eb;">
+            📩 New Portfolio Contact Message
+          </h2>
+
+          <hr />
 
           <p>
             <strong>Name:</strong> ${name}
@@ -58,27 +91,32 @@ ${message}
             <strong>Email:</strong> ${email}
           </p>
 
-          <hr />
-
           <p>
             <strong>Message:</strong>
           </p>
 
-          <p>
+          <div style="
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+          ">
             ${message}
-          </p>
+          </div>
 
           <hr />
 
           <p>
-            You can reply directly to this email to contact ${name}.
+            You can reply directly to this email to contact
+            <strong>${name}</strong>.
           </p>
 
         </div>
       `,
     });
 
+    console.log("====================================");
     console.log("✅ EMAIL SENT SUCCESSFULLY");
+    console.log("Message ID:", info.messageId);
     console.log("====================================");
 
     return res.status(200).json({
@@ -88,8 +126,10 @@ ${message}
 
   } catch (error) {
 
+    console.log("====================================");
     console.error("❌ EMAIL ERROR:");
     console.error(error);
+    console.log("====================================");
 
     return res.status(500).json({
       success: false,
